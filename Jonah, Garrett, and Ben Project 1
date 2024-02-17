@@ -1,2 +1,61 @@
-<h1><center>Jonah, Garrett, and Ben Project 1</center></h1>
+<h1><center>Jonah, Garrett, and Ben Project 1</center></h1>  (this is a markdown cell)import numpy as np
+import pandas as pd
+import requests
+import json
+from matplotlib import pyplot as plt
 
+%run APIkeys.py
+key = os.environ['BLS_API_key']
+
+# Building the basket list
+prefix = 'CUUR'
+area = ['A104','S11A','S12B']
+item = ['SAF','SAF11','SETB01','SSEA011','SAR','SEHF','SAH','SAG1','SAA1']
+
+basketCPI = ['CUUR0000SA0']
+for i in item:
+    for a in area:
+        basketCPI.append(prefix+a+i)
+
+def multiSeriesV4(varList,myKey,first='2018',last='2023'):
+    # Input: varList = a list of strings containing the series names
+    # Input: myKey =  a string containing your BLS API key
+    # Output: new_df = a data frame containing the data collected
+    
+    base_url = 'https://api.bls.gov/publicAPI/v2/timeseries/data/'  #this will not change
+    headers = {'Content-type': 'application/json'}  #This will not changed !
+
+    parameters = {
+        "seriesid":varList,
+        "startyear":first, 
+        "endyear":last,
+        "catalog":True, 
+        "calculations":False, 
+        "annualaverage":False,
+        "aspects":False,
+        "registrationkey": myKey 
+     }
+
+    data = json.dumps(parameters) #this converts the Python dictionary into a JSON format
+    
+    p = requests.post(base_url, data=data, headers=headers)
+    json_data = json.loads(p.text)
+    
+    n = len(varList) #number of series requested
+    
+    new_df = pd.DataFrame(columns=['year', 'period'])
+    for item in range(n):
+        l = len(json_data['Results']['series'][item]['data']) #length of the list
+        if l == 0:
+            print('Series ',varList[item],' does not exist')
+        else:
+            
+            print('Series ',varList[item],' exists with ',l,' observations')
+            d = json_data['Results']['series'][item]['data']
+            current_df = pd.DataFrame(data=d)
+            current_df = current_df[['year','period','value']].astype({'value': 'float64'})
+            current_df = current_df.rename(columns = {'value':varList[item]}) 
+            
+            new_df = new_df.merge(current_df, on = ['year','period'],how='outer')
+    
+    return new_df
