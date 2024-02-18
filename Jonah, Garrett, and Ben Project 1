@@ -2,6 +2,10 @@
 
 (new cell)
 
+Note to self: re add in some comments about functions (per assignment criteria)    (this is a markdown cell)
+
+(new cell)
+
 import numpy as np
 import pandas as pd
 import requests
