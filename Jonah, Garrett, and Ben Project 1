@@ -18,7 +18,9 @@ for i in item:
     for a in area:
         basketCPI.append(prefix+a+i)
 
-def multiSeriesV4(varList,myKey,first='2018',last='2023'):
+basketCPI
+
+def multiSeries(varList,myKey,first='2018',last='2023'):
     # Input: varList = a list of strings containing the series names
     # Input: myKey =  a string containing your BLS API key
     # Output: new_df = a data frame containing the data collected
@@ -60,3 +62,5 @@ def multiSeriesV4(varList,myKey,first='2018',last='2023'):
             new_df = new_df.merge(current_df, on = ['year','period'],how='outer')
     
     return new_df
+
+df = multiSeries(basketCPI, key)
