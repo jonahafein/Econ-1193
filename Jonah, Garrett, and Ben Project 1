@@ -89,7 +89,13 @@ def multiSeries(varList,myKey,first='2018',last='2023'):
 (new cell)
 
 df = multiSeries(varList = basketCPI,myKey=key,first='2018',last='2023')
+
 (new cell)
+
+NOTE: Make a table here (or somewhere else) to show weights)    (this is a markdown cell)
+
+(new cell)
+
 df = df.rename(columns = {'CUUR0000SA0':'CPI_U'})
 df.head(10)
 (new cell)
