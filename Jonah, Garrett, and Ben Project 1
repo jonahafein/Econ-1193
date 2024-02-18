@@ -1,4 +1,7 @@
-<h1><center>Jonah, Garrett, and Ben Project 1</center></h1>  (this is a markdown cell)
+<h1><center>Jonah, Garrett, and Ben Project 1</center></h1> (This cell is markdown)
+
+(new cell)
+
 import numpy as np
 import pandas as pd
 import requests
@@ -8,17 +11,32 @@ from matplotlib import pyplot as plt
 %run APIkeys.py
 key = os.environ['BLS_API_key']
 
+(new cell)
+
 # Building the basket list
 prefix = 'CUUR'
-area = ['A104','S11A','S12B']
-item = ['SAF','SAF11','SETB01','SSEA011','SAR','SEHF','SAH','SAG1','SAA1']
+#since Pittsburgh does not have updated data, we use Middle Atlantic Region to represent it (0120)
+area = ['0120', 'S12A', 'S11A']
+item = ['SAF1','SAR','SEHF','SAH','SAH2']
 
 basketCPI = ['CUUR0000SA0']
 for i in item:
     for a in area:
         basketCPI.append(prefix+a+i)
 
+#gasoline not purchased in Pittsburgh
+basketCPI.append('CUURS12ASETB01')
+basketCPI.append('CUURS11ASETB01')
+
+#using city average for missing data
+basketCPI.append('CUUR0000SERA04')
+basketCPI.append('CUUR0000SSEA011')
+basketCPI.append('CUUR0000SEAA')
+basketCPI.append('CUUR0000SEGE')
+(new cell)
 basketCPI
+
+(new cell)
 
 def multiSeries(varList,myKey,first='2018',last='2023'):
     # Input: varList = a list of strings containing the series names
@@ -44,6 +62,11 @@ def multiSeries(varList,myKey,first='2018',last='2023'):
     p = requests.post(base_url, data=data, headers=headers)
     json_data = json.loads(p.text)
     
+    if p.status_code != 200:
+        # Handle error (e.g., print an error message or raise an exception)
+        print(f"Error fetching data: {p.status_code}")
+        return None
+    
     n = len(varList) #number of series requested
     
     new_df = pd.DataFrame(columns=['year', 'period'])
@@ -63,4 +86,59 @@ def multiSeries(varList,myKey,first='2018',last='2023'):
     
     return new_df
 
-df = multiSeries(basketCPI, key)
+(new cell)
+
+df = multiSeries(varList = basketCPI,myKey=key,first='2018',last='2023')
+(new cell)
+df = df.rename(columns = {'CUUR0000SA0':'CPI_U'})
+df.head(10)
+(new cell)
+df.sort_values(by=['year','period'],inplace=True,ascending=False)
+(new cell)
+bimonthly_vars = ['CUURS11ASAF1','CUURS11ASAR','CUURS11ASAH','CUURS11ASAH2']
+
+def bimonthly2monthly(myData, ser):
+    import pandas as pd
+    import math
+    
+    n = len(myData[ser[0]]) 
+
+    for col in ser:
+        for i in range(1,n-1):
+
+            if pd.isna(myData[col].iat[i]): #the value in place i is NaN
+                myData[col].iat[i] = math.sqrt(myData[col].iat[i-1]*myData[col].iat[i+1]) #replace NaN with a geometric avg of i-1 and i+1
+
+            if pd.isna(myData[col].iat[0]): #the value in the first place is NaN
+                myData[col].iat[0] = myData[col].iat[1]*(myData[col].iat[1]/myData[col].iat[2]) #assume the same growth rate from 2 to 1 to be from 1 to 0
+
+            if pd.isna(myData[col].iat[n-1]): #the value in the last place is NaN
+                myData[col].iat[n-1] = myData[col].iat[n-2]*(myData[col].iat[n-2]/myData[col].iat[n-3]) #assume the same growth rate from n-2 to n-3 to be n-2 to n-1
+
+    return myData
+
+df = bimonthly2monthly(myData=df, ser=bimonthly_vars)
+
+df.head()
+
+(new cell)
+
+missing_values = df.isnull().sum()
+missing_values
+
+(new cell)
+
+#adding a row of zeros
+nrows, ncols = df.shape
+df["myCPI"] = np.zeros(nrows)
+
+df.head()
+
+
+
+
+
+
+
+
+
