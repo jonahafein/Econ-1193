@@ -1,9 +1,4 @@
-<h1><center>Jonah, Garrett, and Ben Project 1</center></h1> (This cell is markdown)
-
-(new cell)
-
-Note to self: re add in some comments about functions (per assignment criteria - "All code should be clearly and meaningfully commented, especially
-functions!")    (this is a markdown cell)
+<h1><center><u>Jonah, Garrett, and Ben CPI Project:</u></center></h1> (this is a markdown cell)
 
 (new cell)
 
@@ -18,11 +13,58 @@ key = os.environ['BLS_API_key']
 
 (new cell)
 
+(this cell is a markdown cell):
+<h1><center>Table 1: Item Weights Within Each Location:</center></h1>
+
+<center>The following table provides the weights of our consumption within each location we spend time in (weights are rounded to one decimal place). Therefore, the weights shown in table 1 are not for the whole basket, but rather for each individual location. </center>
+    
+
+<br>
+
+
+<center><b>Table 1:</b></center>
+
+|Item| Mid-Atlantic Region (60%)| NY-NJ-PA (25%)| Boston (15%) |
+|----------|-----------|-------------|--------|
+|Housing   |   56.7%|  68.5%      |   68.5%  |
+|Medical Care    |   3.9%|    2.9%   |   2.9%  |
+|Fuels and Utilities |   7.8%|  5.7%      |   5.7%  |
+|Recreation|   7.8%|  7.6%      |   7.6%  |
+|Food|   15.6%|  7.6%      |   7.6%  |
+|Video Subscriptions|   1.8%|  0.9%      |   0.9%  |
+|Textbooks|   3%|  0%      |   0%  |
+|Clothing/Apparel|   1.6%|  1.9%      |   1.9%  |
+|Gasoline|   0%|  4.2%      |   4.2%  |
+|Miscellaneous|   1.8%|  0.7%      |   0.7%  |
+
+<h1><center>Table 2: Overall Weights of All Items:</center></h1>
+<center>The following table provides the total weight on our basket of each item in all locations (the weights are rounded to one decimal place).</center>
+
+<br>
+
+<center><b>Table 2:</b></center>
+
+|Item| Mid-Atlantic Region| NY-NJ-PA | Boston |
+|----------|-----------|-------------|--------|
+|Housing   |   34%|  17.1%      |   10.2%  |
+|Medical Care    |   2.3%|    0.7%   |   0.4%  |
+|Fuels and Utilities |   4.7%|  1.4%      |   0.9%  |
+|Recreation|   4.7%|  1.9%      |   1.1%  |
+|Food|   9.4%|  1.9%      |   1.1%  |
+|Video Subscriptions|   1.1%|  0.2%      |   0.1%  |
+|Textbooks|   1.8%|  0%      |   0%  |
+|Clothing/Apparel|   1%|  0.5%      |   0.3%  |
+|Gasoline|   0%|  1.1%      |   0.6%  |
+|Miscellaneous|   1.1%|  0.2%      |   0.1%  |
+
+(new cell)
+
+
 # Building the basket list
 prefix = 'CUUR'
 #since Pittsburgh does not have updated data, we use Middle Atlantic Region to represent it (0120)
 area = ['0120', 'S12A', 'S11A']
-item = ['SAF1','SAR','SEHF','SAH','SAH2']
+item = ['SAF1','SAR','SAM','SAH','SAH2']
 
 basketCPI = ['CUUR0000SA0']
 for i in item:
@@ -33,12 +75,15 @@ for i in item:
 basketCPI.append('CUURS12ASETB01')
 basketCPI.append('CUURS11ASETB01')
 
+
 #using city average for missing data
 basketCPI.append('CUUR0000SERA04')
 basketCPI.append('CUUR0000SSEA011')
 basketCPI.append('CUUR0000SEAA')
 basketCPI.append('CUUR0000SEGE')
+
 (new cell)
+
 basketCPI
 
 (new cell)
@@ -68,7 +113,7 @@ def multiSeries(varList,myKey,first='2018',last='2023'):
     json_data = json.loads(p.text)
     
     if p.status_code != 200:
-        # Handle error (e.g., print an error message or raise an exception)
+        # Handle error (prints status code)
         print(f"Error fetching data: {p.status_code}")
         return None
     
@@ -97,16 +142,16 @@ df = multiSeries(varList = basketCPI,myKey=key,first='2018',last='2023')
 
 (new cell)
 
-NOTE: Make a table here (or somewhere else) to show weights)    (this is a markdown cell)
-
-(new cell)
-
 df = df.rename(columns = {'CUUR0000SA0':'CPI_U'})
 df.head(10)
+
 (new cell)
+
 df.sort_values(by=['year','period'],inplace=True,ascending=False)
+
 (new cell)
-bimonthly_vars = ['CUURS11ASAF1','CUURS11ASAR','CUURS11ASAH','CUURS11ASAH2']
+
+bimonthly_vars = ['CUURS11ASAF1','CUURS11ASAR','CUURS11ASAH','CUURS11ASAH2','CUURS11ASAM']
 
 def bimonthly2monthly(myData, ser):
     import pandas as pd
@@ -143,13 +188,98 @@ missing_values
 nrows, ncols = df.shape
 df["myCPI"] = np.zeros(nrows)
 
-df.head()
+df['myCPI'].head()
 
+(new cell)
 
+df.columns
 
+(new cell)
 
+<center><b>First implement the weights and ensure they add up to 1 (or 100%):<b><center> (this is a markdown cell)
 
+(new cell)
 
+#first define the weights from table 2:
+weights = {'CUUR0120SAF1': 0.094, 'CUURS12ASAF1': 0.019, 'CUURS11ASAF1': 0.011, 'CUUR0120SAR': 0.04, 
+           'CUURS12ASAR': 0.0195, 'CUURS11ASAR': 0.011, 'CUUR0120SAM': 0.023, 'CUURS12ASAM': 0.007, 
+           'CUURS11ASAM': 0.004, 'CUUR0120SAH': 0.34, 'CUURS12ASAH': 0.174, 'CUURS11ASAH': 0.102, 
+           'CUUR0120SAH2': 0.047, 'CUURS12ASAH2': 0.0145, 'CUURS11ASAH2': 0.0095,'CUURS12ASETB01': 0.0135, 
+           'CUURS11ASETB01': 0.006, 'CUUR0000SERA04': 0.014, 'CUUR0000SSEA011': 0.0185, 'CUUR0000SEAA': 0.0185, 
+           'CUUR0000SEGE': 0.014}
 
+sum_weights = sum(weights.values())
+sum_weights
 
+(new cell)
 
+<center><b>Then use the weights to build our CPI:<b><center> (this is a markdown cell)
+
+df['myCPI'] = sum(df[col]* weight for col, weight in weights.items())
+df[['year','period','myCPI']].head(10)
+
+(new cell)
+
+<h1><center>Calculating our Inflation and the General Inflation:</center></h1> (this is a markdown cell)
+
+(new cell)
+
+cpi = df["CPI_U"]
+mycpi = df["myCPI"]
+
+def myinflation(lag):
+    # This function computes the percent change in the level of myCPI (inflation) for the 
+    # 12 months starting '12+lag' months ago and ending 'lag' months ago.
+    # lag is an integer input
+    
+    new = mycpi[lag]
+    old = mycpi[12+lag]
+    
+    change = (new/old - 1)*100
+    
+    return change
+
+def generalinflation(lag):
+    # This function computes the percent change in the level of general CPI (inflation) for the 
+    # 12 months starting '12+lag' months ago and ending 'lag' months ago.
+    # lag is an integer input
+    
+    new = cpi[lag]
+    old = cpi[12+lag]
+    
+    change = (new/old - 1)*100
+    
+    return change
+
+(new cell)
+
+obs = nrows - 12 
+print(f"There are {obs} months in our inflation data")
+
+(new cell)
+
+myInflation = list(map(myinflation,range(obs)))
+myInflation.reverse()
+
+lags = list(range(obs))
+lags.reverse()
+lags = list(map(str,lags))
+
+Inflation = list(map(generalinflation,range(obs)))
+Inflation.reverse()
+
+(new cell)
+
+plt.figure(figsize = (20,10))
+
+plt.plot(lags,Inflation, color='blue', marker='o', linestyle='solid', label = "General CPI")
+plt.plot(lags,myInflation, color='green', marker='*', linestyle='dashed', label = "My CPI")
+plt.legend(loc = 'upper left')
+plt.title("12-Month Inflation: My CPI v.s. General CPI")
+plt.xlabel("Lag (months)")
+plt.ylabel("Inflation (%)")
+plt.show()
+
+(new cell)
+
+generalinflation(0)
